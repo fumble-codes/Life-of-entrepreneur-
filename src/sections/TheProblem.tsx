@@ -18,7 +18,7 @@ const problems = [
 ]
 
 /* ----------------------------- */
-/* Video: auto pause when hidden */
+/* Video: fast load + auto pause */
 /* ----------------------------- */
 const SmartVideo = memo(({ src }: { src: string }) => {
   const ref = useRef<HTMLVideoElement>(null)
@@ -26,6 +26,10 @@ const SmartVideo = memo(({ src }: { src: string }) => {
   useEffect(() => {
     const el = ref.current
     if (!el) return
+
+    // warm up decoder early (cheap + instant first frame)
+    el.preload = "metadata"
+    el.load()
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -35,12 +39,15 @@ const SmartVideo = memo(({ src }: { src: string }) => {
           el.pause()
         }
       },
-      { threshold: 0.4 }
+      {
+        threshold: 0.35,
+        rootMargin: "120px 0px",
+      }
     )
 
     observer.observe(el)
     return () => observer.disconnect()
-  }, [])
+  }, [src])
 
   return (
     <video
@@ -48,7 +55,7 @@ const SmartVideo = memo(({ src }: { src: string }) => {
       muted
       loop
       playsInline
-      preload="none"
+      preload="metadata"
       className="h-full w-full object-cover"
     >
       <source src={src} type="video/mp4" />
@@ -69,11 +76,7 @@ export function TheProblem() {
     offset: ["start end", "end start"],
   })
 
-  const progressHeight = useTransform(
-    scrollYProgress,
-    [0, 1],
-    reduceMotion ? ["0%", "100%"] : ["0%", "100%"]
-  )
+  const progressHeight = useTransform(scrollYProgress, [0, 1], ["0%", "100%"])
 
   return (
     <section
@@ -109,7 +112,17 @@ export function TheProblem() {
         {/* Scroll Narrative */}
         <div ref={progressRef} className="relative">
 
-          {/* Desktop spine (motion kept, very cheap) */}
+          {/* MOBILE SPINE */}
+          <div className="absolute left-3 top-0 h-full w-[2px] bg-white/10 sm:hidden">
+            {!reduceMotion && (
+              <motion.div
+                style={{ height: progressHeight }}
+                className="w-full bg-gradient-to-b from-[#FFD84D] to-[#FFB800]"
+              />
+            )}
+          </div>
+
+          {/* DESKTOP SPINE */}
           <div className="absolute left-1/2 top-0 h-full w-[2px] -translate-x-1/2 bg-white/10 hidden sm:block">
             {!reduceMotion && (
               <motion.div
@@ -149,7 +162,7 @@ export function TheProblem() {
                   <div className={`${isLeft ? "md:order-2" : "md:order-1"} flex justify-center`}>
                     <div className="relative">
 
-                      {/* Glow → CSS only (no motion) */}
+                      {/* Glow */}
                       <div className="absolute inset-0 rounded-[32px] sm:rounded-[42px] bg-[radial-gradient(circle_at_center,rgba(255,216,77,0.35),transparent_65%)] blur-[70px]" />
 
                       <div className="relative h-[220px] sm:h-[300px] md:h-[360px] w-[320px] sm:w-[460px] md:w-[600px] rounded-[32px] sm:rounded-[42px] border border-white/10 bg-black overflow-hidden shadow-[0_70px_160px_rgba(0,0,0,0.8)]">
