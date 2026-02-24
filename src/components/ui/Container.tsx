@@ -9,7 +9,13 @@ type ContainerProps = {
 
 export function Container({ children, className }: ContainerProps) {
   return (
-    <div className={cn(tokens.spacing.container, className)}>
+    <div
+      className={cn(
+        // Fallback-safe spacing
+        tokens.spacing?.container ?? "px-6 mx-auto max-w-7xl",
+        className
+      )}
+    >
       {children}
     </div>
   )

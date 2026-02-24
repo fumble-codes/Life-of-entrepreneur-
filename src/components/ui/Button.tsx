@@ -1,9 +1,11 @@
-import type { ComponentProps } from "react"
+import type { ComponentProps, ReactNode } from "react"
 import { motion } from "framer-motion"
 import { tokens } from "../../design-system/tokens"
 import { cn } from "../../lib/cn"
 
-type ButtonProps = ComponentProps<typeof motion.button>
+type ButtonProps = Omit<ComponentProps<typeof motion.button>, "children"> & {
+  children?: ReactNode
+}
 
 export function Button({ className, children, ...props }: ButtonProps) {
   return (
